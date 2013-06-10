@@ -28,5 +28,5 @@ requires:
 resources:
   bugtracker: https://github.com/gittex/Test-Puppet-Compile/issues
   repository: git://github.com/gittex/Test-Puppet-Compile.git
-version: 0.01
+version: 0.02
 x_authority: cpan:TEX
