@@ -1,6 +1,6 @@
 package Test::Puppet::Compile;
 {
-  $Test::Puppet::Compile::VERSION = '0.02';
+  $Test::Puppet::Compile::VERSION = '0.03';
 }
 BEGIN {
   $Test::Puppet::Compile::AUTHORITY = 'cpan:TEX';
@@ -98,6 +98,13 @@ has 'reportsdir' => (
   'default' => '',
 );
 
+# if set use the specified ENC
+has 'enc' => (
+  'is'      => 'rw',
+  'isa'     => 'Str',
+  'default' => '',
+);
+
 # set to false to keep temporary files/directories
 has 'cleanup' => (
   'is'      => 'ro',
@@ -184,18 +191,18 @@ sub test {
   my $self = shift;
 
   diag('Tempdir: '.$self->tempdir());
- 
+
   # set up dir structure
   ok($self->_setup(),'Setup for tests successfull');
-  
+
   my $node_ref = $self->_scan_nodes();
-  
+
   is(ref($node_ref),'HASH','Node_ref is an hashref');
   ok(scalar(keys %$node_ref) > 0,'Found at least one environment');
   foreach my $env (@{$self->reqenvs()}) {
     is(ref($node_ref->{$env}),'HASH','Found Env '.$env);
   }
-  
+
   # loop over each environment
   EMV: foreach my $env (sort keys %$node_ref) {
     ok(exists $node_ref->{$env},'Env '.$env.' is defined');
@@ -241,10 +248,8 @@ sub test {
         open(my $FH, '<', $errfile);
         my @lines = <$FH>;
         close($FH);
-        if($self->warnings()) {
-          @lines = grep { /(?:Error|Warning): / } @lines; 
-        } else {
-          @lines = grep { /Error: / } @lines; 
+        if(!$self->warnings()) {
+          @lines = grep { /Error: / } @lines;
         }
         foreach my $line (@lines) {
           diag('Puppet Compile: '.$line);
@@ -256,7 +261,7 @@ sub test {
       }
     }
   }
-  
+
   done_testing();
 
   $self->_archive_summary();
@@ -375,14 +380,19 @@ sub _write_puppetconf {
   my $self = shift;
   my $filename = $self->tempdir().'/puppet.conf';
   my $body;
+  my $vars = {
+    'tempdir'     => $self->tempdir(),
+    'manifest'    => $self->tempdir().'/manifests/$environment.pp',
+    'modulepath'  => $self->tempdir().'/'.join( ':'.$self->tempdir().'/', @{$self->moduledirs}),
+    'hieraconfig' => $self->tempdir().'/hiera.yaml',
+  };
+  if ($self->enc() && -e $self->basedir().'/'.$self->enc()) {
+    $vars->{'use_enc'} = 1;
+    $vars->{'enc'} = $self->enc();
+  }
   $self->tt()->process(
       'puppet.conf.tt',
-      {
-          'tempdir'     => $self->tempdir(),
-          'manifest'    => $self->tempdir().'/manifests/$environment.pp',
-          'modulepath'  => $self->tempdir().'/'.join( ':'.$self->tempdir().'/', @{$self->moduledirs}),
-          'hieraconfig' => $self->tempdir().'/hiera.yaml',
-      },
+      $vars,
       \$body,
   ) or return;
   open(my $FH, '>', $filename);
