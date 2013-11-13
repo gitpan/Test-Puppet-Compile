@@ -4,7 +4,7 @@
       "Dominik Schulz <dominik.schulz@gauner.org>"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "Dist::Zilla version 4.300039, CPAN::Meta::Converter version 2.132661",
+   "generated_by" : "Dist::Zilla version 5.005, CPAN::Meta::Converter version 2.132661",
    "license" : [
       "perl_5"
    ],
@@ -54,7 +54,7 @@
          "web" : "https://github.com/gittex/Test-Puppet-Compile"
       }
    },
-   "version" : "0.03",
+   "version" : "0.04",
    "x_authority" : "cpan:TEX"
 }
 
